@@ -37,9 +37,9 @@ extern "C" {
 #define array_t(T) T*
 
 
-// void array_init(T* array, size_t capacity, void (*destructor)(T* begin, T* end))
-#define array_init(a, capacity, destructor) \
-    (_array_init(_array_cast(a), capacity, (_array_destructor_t)destructor))
+// void array_alloc(T* array, size_t capacity, void (*destructor)(T* begin, T* end))
+#define array_alloc(a, capacity, destructor) \
+    (_array_alloc(_array_cast(a), capacity, (_array_destructor_t)destructor))
 
 
 // void array_free(T* array)
@@ -271,12 +271,13 @@ size_t _array_size(_array_t* const a) {
 
 
 static inline
-void _array_alloc(_array_t* a, const size_t capacity) {
+void _array_alloc(_array_t* a, const size_t capacity, _array_destructor_t destructor) {
+    _array_assert(!(*a), "array already allocated");
     const size_t mem_size = sizeof(_array_header_t) + capacity;
     _array_header_t* const header = 
         (_array_header_t*)_array_allocator(NULL, mem_size);
     header->allocator = _array_allocator;
-    header->destructor = NULL;
+    header->destructor = destructor;
     header->capacity = capacity;
     header->size = 0;
     (*a) = header->data;
@@ -324,14 +325,6 @@ void _array_shrink(_array_t* a) {
         new_header->capacity = new_capacity;
         (*a) = new_header->data;
     }
-}
-
-
-static inline
-void _array_init(_array_t* a, const size_t capacity, _array_destructor_t destructor) {
-    _array_assert(!(*a), "array already initialized");
-    _array_alloc(a, capacity);
-    _array_header(a)->destructor = destructor;
 }
 
 

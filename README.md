@@ -4,8 +4,8 @@ A simple std::vector-style array for C
 ```C
 int* a = NULL;
 
-// initialize array 'a' with capacity of int[16], and no destructor
-array_init(a, 16, NULL);
+// allocate array 'a' with capacity of int[16], and no destructor callback
+array_alloc(a, 16, NULL);
 
 array_append(a) = 1; // append to the array, and assign 1 to the appended integer
 
@@ -31,4 +31,6 @@ for (int* itr = a; itr < end; ++itr) {
 	printf("%i, ", *itr);
 }
 puts("\n");
+
+array_free(a); // free memory
 ```

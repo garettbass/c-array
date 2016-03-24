@@ -31,7 +31,7 @@ int main(int argc, const char* argv[]) {
     assert(array_size(a) == 0);
     assert(array_capacity(a) == 0);
 
-    array_init(a, 0, destructed_element_count_destructor);
+    array_alloc(a, 0, destructed_element_count_destructor);
     assert(array_size(a) == 0);
     assert(array_capacity(a) == 0);
 
@@ -110,7 +110,7 @@ int main(int argc, const char* argv[]) {
     enum { TEST_LENGTH = 1024 };
 
 
-    array_init(a, 0, destructed_element_count_destructor);
+    array_alloc(a, 0, destructed_element_count_destructor);
     for (int i = 0; i < TEST_LENGTH; ++i) {
         array_append(a) = i;
     }
@@ -143,7 +143,7 @@ int main(int argc, const char* argv[]) {
     assert(array_capacity(a) == 0);
 
 
-    array_init(a, 0, destructed_element_count_destructor);
+    array_alloc(a, 0, destructed_element_count_destructor);
     for (int i = 0; i < TEST_LENGTH; ++i) {
         array_insert(a,0) = i;
     }
