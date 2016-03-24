@@ -1,6 +1,5 @@
-#include <array.h>
-// #include <assert.h>
 #include <stdio.h>
+#include "../include/array.h"
 
 
 #ifndef assert
@@ -23,7 +22,6 @@ void destructed_element_count_destructor(int* begin, int* end) {
         destructed_element_count += 1;
     }
 }
-
 
 
 int main(int argc, const char* argv[]) {
