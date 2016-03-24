@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+
+
+# find root path
+pushd `dirname $0`/../.. > /dev/null
+ROOT_DIR=`pwd`
+echo $ROOT_DIR
+popd > /dev/null
+
+
+BIN_DIR="$ROOT_DIR/bin/osx"
+INCLUDE_DIR="$ROOT_DIR/include"
+OBJ_DIR="$ROOT_DIR/obj/osx"
+SRC_DIR="$ROOT_DIR/src"
+
+
+# locate toolchain
+CC=`xcrun --find clang --sdk macosx 2>&1`
+OSXSDK=`xcrun --show-sdk-path --sdk macosx 2>&1`
+CFLAGS="-arch x86_64 -isysroot $OSXSDK -Wall -Werror"
+INCLUDES="-I$INCLUDE_DIR"
+
+
+# compile_c <src>
+compile_c() {
+    local src="$SRC_DIR/$1"
+    local obj="$OBJ_DIR/$1.o"
+    mkdir -p `dirname $obj`
+    $CC $CFLAGS $INCLUDES -c $src -o $obj
+    OBJS+=" $obj"
+}
+
+
+# link <app>
+link() {
+    local app=$1
+    mkdir -p `dirname $app`
+    $CC $CFLAGS $CXXFLAGS $FRAMEWORKS $OBJS -o $app
+}
+
+
+APP="$BIN_DIR/tests"
+
+
+compile_c "tests.c" && \
+link $APP && \
+echo "starting $APP...\n" && \
+$APP; \
+echo "finished $APP: $?"

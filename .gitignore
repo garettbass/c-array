@@ -1,0 +1,38 @@
+# OS X
+.DS_Store
+
+bundle/
+bundle
+source/game/build/
+
+# Xcode user data and build folders
+xcuserdata
+/source/DerivedData
+/source/game/bundle
+
+# vim tmp file(s)
+*.swp
+
+# sublime project files
+*.sublime-*
+
+# Any obj directory
+bin/
+obj/
+
+# Windows project and build files
+*.vcxproj.user
+*.obj
+*.sdf
+*.opensdf
+*.opendb
+*.pdb
+*.ipch
+*.suo
+*.tlog
+*.log
+
+# Windows folders
+Debug/
+Release/
+packages/
