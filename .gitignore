@@ -1,9 +1,9 @@
+bin/
+obj/
+docs/
+
 # OS X
 .DS_Store
-
-bundle/
-bundle
-source/game/build/
 
 # Xcode user data and build folders
 xcuserdata
@@ -15,10 +15,6 @@ xcuserdata
 
 # sublime project files
 *.sublime-*
-
-# Any obj directory
-bin/
-obj/
 
 # Windows project and build files
 *.vcxproj.user

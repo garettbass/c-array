@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../include/array.h"
+#include <array.h>
 
 
 #ifndef assert
@@ -24,8 +24,11 @@ void destructed_element_count_destructor(int* begin, int* end) {
 }
 
 
+typedef array_t(int) int_array;
+
+
 int main(int argc, const char* argv[]) {
-    array_t(int) a = 0;
+    int_array a = {0};
     assert(array_size(a) == 0);
     assert(array_capacity(a) == 0);
 
@@ -37,57 +40,66 @@ int main(int argc, const char* argv[]) {
     int* a0 = &array_append(a); *a0 = 1;
     assert(array_size(a) == 1);
     assert(array_capacity(a) >= 1);
-    assert(a[0] == 1);
+    assert(array(a)[0] == 1);
 
 
     array_append(a) = 2;
     assert(array_size(a) == 2);
     assert(array_capacity(a) >= 2);
-    assert(a[0] == 1);
-    assert(a[1] == 2);
+    assert(array(a)[0] == 1);
+    assert(array(a)[1] == 2);
 
 
     array_append(a) = 3;
     assert(array_size(a) == 3);
     assert(array_capacity(a) >= 3);
-    assert(a[0] == 1);
-    assert(a[1] == 2);
-    assert(a[2] == 3);
+    assert(array(a)[0] == 1);
+    assert(array(a)[1] == 2);
+    assert(array(a)[2] == 3);
 
 
     array_insert(a,0) = 0;
     assert(array_size(a) == 4);
     assert(array_capacity(a) >= 4);
-    assert(a[0] == 0);
-    assert(a[1] == 1);
-    assert(a[2] == 2);
-    assert(a[3] == 3);
+    assert(array(a)[0] == 0);
+    assert(array(a)[1] == 1);
+    assert(array(a)[2] == 2);
+    assert(array(a)[3] == 3);
 
 
     array_reserve(a,16);
     assert(array_size(a) == 4);
     assert(array_capacity(a) == 16);
-    assert(a[0] == 0);
-    assert(a[1] == 1);
-    assert(a[2] == 2);
-    assert(a[3] == 3);
+    assert(array(a)[0] == 0);
+    assert(array(a)[1] == 1);
+    assert(array(a)[2] == 2);
+    assert(array(a)[3] == 3);
 
 
     array_shrink(a);
     assert(array_size(a) == 4);
     assert(array_capacity(a) == 4);
-    assert(a[0] == 0);
-    assert(a[1] == 1);
-    assert(a[2] == 2);
-    assert(a[3] == 3);
+    assert(array(a)[0] == 0);
+    assert(array(a)[1] == 1);
+    assert(array(a)[2] == 2);
+    assert(array(a)[3] == 3);
 
 
     array_remove(a,0);
     assert(array_size(a) == 3);
     assert(array_capacity(a) == 4);
-    assert(a[0] == 1);
-    assert(a[1] == 2);
-    assert(a[2] == 3);
+    assert(array(a)[0] == 1);
+    assert(array(a)[1] == 2);
+    assert(array(a)[2] == 3);
+    assert(destructed_element_count == 1);
+    destructed_element_count = 0;
+
+
+    array_remove_unordered(a,0);
+    assert(array_size(a) == 2);
+    assert(array_capacity(a) == 4);
+    assert(array(a)[0] == 3);
+    assert(array(a)[1] == 2);
     assert(destructed_element_count == 1);
     destructed_element_count = 0;
 
@@ -95,12 +107,12 @@ int main(int argc, const char* argv[]) {
     array_clear(a);
     assert(array_size(a) == 0);
     assert(array_capacity(a) >= 0);
-    assert(destructed_element_count == 3);
+    assert(destructed_element_count == 2);
     destructed_element_count = 0;
 
 
     array_free(a);
-    assert(a == 0);
+    assert(array(a) == NULL);
     assert(array_size(a) == 0);
     assert(array_capacity(a) == 0);
 
@@ -115,19 +127,19 @@ int main(int argc, const char* argv[]) {
     assert(array_size(a) == TEST_LENGTH);
     assert(array_capacity(a) >= TEST_LENGTH);
     for (int i = 0; i < TEST_LENGTH; ++i) {
-        assert(a[i] == i);
+        assert(array(a)[i] == i);
     }
     {
         int i = 0;
         const int* const end = array_end(a);
-        for (int* itr = a; itr < end; ++itr) {
+        for (int* itr = array_begin(a); itr < end; ++itr) {
             assert(*itr == i++);
         }
     }
     {
         int i = 0;
         while (array_size(a)) {
-            assert(a[0] == i++);
+            assert(array(a)[0] == i++);
             array_remove(a,0);
         }
         assert(array_size(a) == 0);
@@ -136,7 +148,7 @@ int main(int argc, const char* argv[]) {
         destructed_element_count = 0;
     }
     array_free(a);
-    assert(a == 0);
+    assert(array(a) == NULL);
     assert(array_size(a) == 0);
     assert(array_capacity(a) == 0);
 
@@ -148,10 +160,10 @@ int main(int argc, const char* argv[]) {
     assert(array_size(a) == TEST_LENGTH);
     assert(array_capacity(a) >= TEST_LENGTH);
     for (int i = 0; i < TEST_LENGTH; ++i) {
-        assert(a[i] == (TEST_LENGTH - 1) - i);
+        assert(array(a)[i] == (TEST_LENGTH - 1) - i);
     }
     array_free(a);
-    assert(a == 0);
+    assert(array(a) == NULL);
     assert(array_size(a) == 0);
     assert(array_capacity(a) == 0);
 
