@@ -168,5 +168,6 @@ int main(int argc, const char* argv[]) {
     assert(array_capacity(a) == 0);
 
 
+    puts("array.h: passed tests");
     return 0;
 }
