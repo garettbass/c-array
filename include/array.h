@@ -180,7 +180,7 @@ extern "C" {
 //------------------------------------------------------------------------------
 
 
-typedef void* _array_t;
+typedef char* _array_t;
 
 typedef void* (*_array_allocator_t)(void* array, size_t size);
 
@@ -368,8 +368,8 @@ void _array_free(_array_t* a) {
     if (header) {
         if (header->destructor) {
             const size_t free_size = header->size;
-            void* free_begin = (*a);
-            void* free_end = free_begin + free_size;
+            char* free_begin = (*a);
+            char* free_end = free_begin + free_size;
             header->destructor(free_begin, free_end);
         }
         header = header->allocator(header, 0);
@@ -423,8 +423,8 @@ void _array_resize(_array_t* a, const size_t new_size) {
     if (old_size > new_size) {
         if (header->destructor) {
             const size_t discard_size = old_size - new_size;
-            void* discard_begin = (*a) + new_size;
-            void* discard_end = discard_begin + discard_size;
+            char* discard_begin = (*a) + new_size;
+            char* discard_end = discard_begin + discard_size;
             header->destructor(discard_begin, discard_end);
         }
         header->size = new_size;
@@ -464,8 +464,8 @@ size_t _array_insert(_array_t* a, const size_t insert_offset, const size_t inser
     const size_t new_size = old_size + insert_size;
     _array_reserve(a, new_size);
     _array_header(a)->size = new_size;
-    void* insert_begin = (*a) + insert_offset;
-    void* insert_end = insert_begin + insert_size;
+    char* insert_begin = (*a) + insert_offset;
+    char* insert_end = insert_begin + insert_size;
     const size_t end_size = old_size - insert_offset;
     _array_memmove(insert_end, insert_begin, end_size);
     return insert_offset;
@@ -480,8 +480,8 @@ void _array_remove(_array_t* a, const size_t remove_offset, const size_t remove_
     _array_assert(remove_size <= old_size - remove_offset, "array index out of range");
     const size_t new_size = old_size - remove_size;
     _array_header_t* header = _array_header(a);
-    void* remove_begin = (*a) + remove_offset;
-    void* remove_end = remove_begin + remove_size;
+    char* remove_begin = (*a) + remove_offset;
+    char* remove_end = remove_begin + remove_size;
     if (header->destructor) {
         header->destructor(remove_begin, remove_end);
     }
@@ -499,12 +499,12 @@ void _array_remove_unordered(_array_t* a, const size_t remove_offset, const size
     _array_assert(remove_size <= old_size - remove_offset, "array index out of range");
     const size_t new_size = old_size - remove_size;
     _array_header_t* header = _array_header(a);
-    void* remove_begin = (*a) + remove_offset;
-    void* remove_end = remove_begin + remove_size;
+    char* remove_begin = (*a) + remove_offset;
+    char* remove_end = remove_begin + remove_size;
     if (header->destructor) {
         header->destructor(remove_begin, remove_end);
     }
-    void* tail_begin = (*a) + new_size;
+    char* tail_begin = (*a) + new_size;
     _array_memmove(remove_begin, tail_begin, remove_size);
     header->size = new_size;
 }
@@ -531,8 +531,8 @@ void _array_clear(_array_t* const a) {
     _array_assert((*a), "array uninitialized");
     _array_header_t* header = _array_header(a);
     const size_t clear_size = header->size;
-    void* clear_begin = (*a);
-    void* clear_end = clear_begin + clear_size;
+    char* clear_begin = (*a);
+    char* clear_end = clear_begin + clear_size;
     if (header->destructor) {
         header->destructor(clear_begin, clear_end);
     }
