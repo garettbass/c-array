@@ -49,41 +49,9 @@ extern "C" {
 //------------------------------------------------------------------------------
 
 
-#define array_t(T) union { _array_t _array; T* array; }
-/**< Defines the type for a strongly-typed dynamic array.
-
-@note This could have been T*, but that would invite accidental misuse.
-
-@code{.c}
-    typedef array_t(int) int_array_t; // typedef declaration
-    array_t(float) fa;                // variable declaration
-@endcode
-@hideinitializer **/
-
-
-#define array_null {NULL}
-/**< Defines an initializer for a newly-declared dynamic array.
-
-@code{.c}
-    array_t(float) fa = array_null; // an unallocated dynamic array
-@endcode
-@hideinitializer **/
-
-
-// T* array(array_t(T)& a)
-#define array(a) ((a).array)
-/**< Accesses the strongly-typed array pointer.
-
-@code{.c}    
-    array(a)[0] = 1;
-    if (array(a)[0] == 1) // ...
-@endcode
-@hideinitializer **/
-
-
-// void array_alloc(array_t(T)& a, size_t capacity, void (*destructor)(T* begin, T* end))
+// void array_alloc(T*& a, size_t capacity, void (*destructor)(T* begin, T* end))
 #define array_alloc(a, capacity, destructor) \
-    (_array_alloc(_array_ref(a), capacity, array_allocator, (_array_destructor_t)destructor))
+    (_array_alloc(_array_ptr((a)), (capacity) * _array_stride((a)), (array_allocator), (_array_destructor_t)(destructor)))
 /**< Allocates initial storage for a dynamic array.
 
 @param a - the array for which storage will be allocated
@@ -91,7 +59,7 @@ extern "C" {
 @param destructor - an optional destructor to be called by array_remove, array_clear, and array_free
 
 @code{.c}
-    array_t(int) ia = array_null;
+    array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL); // NULL destructor for POD types
 
     // ...
@@ -103,22 +71,22 @@ extern "C" {
 
     // ...
 
-    file_array files = array_null;
+    file_array files = NULL;
     array_alloc(files, 16, file_array_destructor); // destructor closes FILE*
     array_append(files, fopen("some/file", "r"));
 @endcode
 @hideinitializer **/
 
-// void array_free(array_t(T)& a)
+// void array_free(T*& a)
 #define array_free(a) \
-    (_array_free(_array_ref(a)))
+    (_array_free(_array_ptr((a))))
 /**< Frees storage held by a dynamic array.
 @hideinitializer **/
 
 
-// void array_reserve(array_t(T)& a, size_t capacity)
+// void array_reserve(T*& a, size_t capacity)
 #define array_reserve(a, capacity) \
-    (_array_reserve(_array_ref(a), (capacity) * _array_stride(a)))
+    (_array_reserve(_array_ptr((a)), (capacity) * _array_stride((a))))
 /**< Reserves additional storage for a dynamic array.
 
 After a call to array_reserve(), the dynamic array's capacity will be at least
@@ -126,9 +94,9 @@ as large as the requested capacity, possibly larger.
 @hideinitializer **/
 
 
-// void array_resize(array_t(T)& a, size_t size)
+// void array_resize(T*& a, size_t size)
 #define array_resize(a, size) \
-    (_array_resize(_array_ref(a), (size) * _array_stride(a)))
+    (_array_resize(_array_ptr((a)), (size) * _array_stride((a))))
 /**< Resizes the dynamic array.
 
 If the new size is smaller than the old size, old elements are destructed. 
@@ -136,46 +104,46 @@ If the new size is greater than before, new elements are zero-initialized.
 @hideinitializer **/
 
 
-// void array_shrink(array_t(T)& a)
+// void array_shrink(T*& a)
 #define array_shrink(a) \
-    (_array_shrink(_array_ref(a)))
+    (_array_shrink(_array_ptr((a))))
 /**< Shrinks the dynamic array's storage to fit the array's current size.
 @hideinitializer **/
 
 
-// size_t array_capacity(array_t(T) a)
+// size_t array_capacity(T* a)
 #define array_capacity(a) \
-    (_array_capacity(_array_ref(a)) / _array_stride(a))
+    (_array_capacity(_array_ptr((a))) / _array_stride((a)))
 /**< Returns the number of elements that can fit in the dynamic array's storage
 without allocating additional memory, or zero for NULL arrays.
 @hideinitializer **/
 
 
-// int array_compare(array_t(T) a, array_t(T) a)
+// int array_compare(T* a, T* a)
 #define array_compare(a, b) \
-    (_array_compare(_array_ref(a), _array_ref(b)))
+    (_array_compare(_array_ptr((a)), _array_ptr((b))))
 /**< Performs a lexicographic comparison of two arrays using memcmp().
 @hideinitializer **/
 
 
-// size_t array_size(array_t(T) a)
+// size_t array_size(T* a)
 #define array_size(a) \
-    (_array_size(_array_ref(a)) / _array_stride(a))
+    (_array_size(_array_ptr((a))) / _array_stride((a)))
 /**< Returns the number of elements stored in the dynamic array, or zero for
 NULL arrays.
 @hideinitializer **/
 
 
-// bool array_empty(array_t(T) a)
+// bool array_empty(T* a)
 #define array_empty(a) \
-    ((bool)(_array_size(_array_ref(a)) == 0))
+    ((bool)(_array_size(_array_ptr((a))) == 0))
 /**< Returns true if the dynamic array's size is zero.
 @hideinitializer **/
 
 
 // T& array_front(T* array)
 #define array_front(a) \
-    ((a).array[ _array_front_index(_array_ref(a)) ])
+    ((a)[ _array_front_index(_array_ptr((a))) ])
 /**< Returns a reference to the first element in the dynamic array.
 An assertion will fail if the array is empty.
 @hideinitializer **/
@@ -183,38 +151,38 @@ An assertion will fail if the array is empty.
 
 // T& array_back(T* array)
 #define array_back(a) \
-    ((a).array[ _array_back_index(_array_ref(a), _array_stride(a)) ])
+    ((a)[ _array_back_index(_array_ptr((a)), _array_stride((a))) ])
 /**< Returns a reference to the final element in the dynamic array.
 An assertion will fail if the array is empty.
 @hideinitializer **/
 
 
-// T& array_append(array_t(T)& a)
+// T& array_append(T*& a)
 #define array_append(a) \
-    ((a).array[ _array_append(_array_ref(a), _array_stride(a)) / _array_stride(a) ])
+    ((a)[ _array_append(_array_ptr((a)), _array_stride((a))) / _array_stride((a)) ])
 /**< Appends a single element to the dynamic array, allocating additional
 storage if necessary.  The appended element is uninitialized.  Returns a
 reference to the appended element.
 
 @code{.c}
-    array_t(int) ia = array_null;
+    array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL);
     // ...
-    array_append(ia) = 123; // assign value 123 to array(ia)[0]
-    assert(array(ia)[0] == 123);
+    array_append(ia) = 123; // assign value 123 to ia[0]
+    assert(ia[0] == 123);
 @endcode
 @hideinitializer **/
 
 
-// T* array_append_n(array_t(T)& a, size_t count)
+// T* array_append_n(T*& a, size_t count)
 #define array_append_n(a, count) \
-    ((a).array + _array_append(_array_ref(a), _array_offset(a, (count))) / _array_stride(a))
+    ((a) + _array_append(_array_ptr((a)), _array_offset((a), (count))) / _array_stride((a)))
 /**< Appends count elements to the dynamic array, allocating additional storage
 if necessary.  Appended elements are uninitialized.  Returns a pointer to the
 first appended element.
 
 @code{.c}
-    array_t(int) ia = array_null;
+    array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL);
     // ...
     const size_t count = 3;
@@ -225,32 +193,32 @@ first appended element.
 @hideinitializer **/
 
 
-// T& array_insert(array_t(T)& a, size_t index)
+// T& array_insert(T*& a, size_t index)
 #define array_insert(a, index) \
-    ((a).array[ _array_insert(_array_ref(a), _array_offset(a, (index)), _array_stride(a)) / _array_stride(a) ])
+    ((a)[ _array_insert(_array_ptr((a)), _array_offset((a), (index)), _array_stride((a))) / _array_stride((a)) ])
 /**< Inserts a single element at the provided index, allocating additional
 storage if necessary.  The inserted element is uninitialized.  Returns a
 reference to the inserted element.
 
 @code{.c}
-    array_t(int) ia = array_null;
+    array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL);
     // ...
-    array_insert(ia, 1) = 123; // assign value 123 to array(ia)[0]
-    assert(array(ia)[1] == 123);
+    array_insert(ia, 1) = 123; // assign value 123 to ia[0]
+    assert(ia[1] == 123);
 @endcode
 @hideinitializer **/
 
 
-// T* array_insert_n(array_t(T)& a, sizet index, size_t count)
+// T* array_insert_n(T*& a, sizet index, size_t count)
 #define array_insert_n(a, index, count) \
-    ((a).array + _array_insert(_array_ref(a), _array_offset(a, (index)), _array_offset(a, (count))) / _array_stride(a))
+    ((a) + _array_insert(_array_ptr((a)), _array_offset((a), (index)), _array_offset((a), (count))) / _array_stride((a)))
 /**< Inserts count elements into the dynamic array starting at index and
 allocating additional storage if necessary.  Appended elements are
 uninitialized.  Returns a pointer to the first appended element.
 
 @code{.c}
-    array_t(int) ia = array_null;
+    array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL);
     // ...
     const size_t count = 3;
@@ -261,17 +229,17 @@ uninitialized.  Returns a pointer to the first appended element.
 @hideinitializer **/
 
 
-// void array_remove(array_t(T)& a, size_t index)
+// void array_remove(T*& a, size_t index)
 #define array_remove(a, index) \
-    (_array_remove(_array_ref(a), _array_offset(a, (index)), _array_stride(a)))
+    (_array_remove(_array_ptr((a)), _array_offset((a), (index)), _array_stride((a))))
 /**< Removes a single element from the dynamic array at index.  The removed
 element is passed to the array's destructor if it is not NULL.
 @hideinitializer **/
 
 
-// void array_remove_unordered(array_t(T)& a, size_t index)
+// void array_remove_unordered(T*& a, size_t index)
 #define array_remove_unordered(a, index) \
-    (_array_remove_unordered(_array_ref(a), _array_offset(a, (index)), _array_stride(a)))
+    (_array_remove_unordered(_array_ptr((a)), _array_offset((a), (index)), _array_stride((a))))
 /**< Removes a single element from the dynamic array at index.  The removed
 element is passed to the array's destructor if it is not NULL.  The removed
 element is replaced by the final element.  This can be faster than shifting
@@ -279,31 +247,31 @@ the remaining elements into place to maintain their relative order.
 @hideinitializer **/
 
 
-// void array_remove_n(array_t(T)& a, size_t index, size_t count)
+// void array_remove_n(T*& a, size_t index, size_t count)
 #define array_remove_n(a, index, count) \
-    (_array_remove(_array_ref(a), _array_offset(a, (index)), _array_offset(a, (count))))
+    (_array_remove(_array_ptr((a)), _array_offset((a), (index)), _array_offset((a), (count))))
 /**< Removes count elements from the dynamic array, starting at index.  Removed
 elements are passed to the array's destructor if it is not NULL.
 @hideinitializer **/
 
 
-// void array_clear(array_t(T)& a)
+// void array_clear(T*& a)
 #define array_clear(a) \
-    (_array_clear(_array_ref(a)))
+    (_array_clear(_array_ptr((a))))
 /**< Removes all elements from the dynamic array.  Removed elements are passed
 to the array's destructor if it is not NULL.
 @hideinitializer **/
 
 
 // T* array_begin(T* array)
-#define array_begin(a) ((a).array)
+#define array_begin(a) (a)
 /**< Returns a pointer to the first element of the array, or NULL if the array
 is empty or NULL.
 @hideinitializer **/
 
 
 // T* array_end(T* array)
-#define array_end(a) ((a).array + (_array_size(_array_ref(a)) / _array_stride(a)))
+#define array_end(a) ((a) + (_array_size(_array_ptr((a))) / _array_stride((a))))
 /**< Returns a pointer just past the last element of the array, or NULL if the
 array is NULL.
 @hideinitializer **/
@@ -312,11 +280,11 @@ array is NULL.
 //==============================================================================
 
 
-#define _array_ref(a) (&((a)._array))
+#define _array_ptr(a) ((_array_t*)&(a))
 
-#define _array_stride(a) (sizeof((a).array[0]))
+#define _array_stride(a) (sizeof((a)[0]))
 
-#define _array_offset(a, n) ((size_t)(_array_stride(a) * n))
+#define _array_offset(a, n) ((size_t)(_array_stride((a)) * n))
 
 
 //------------------------------------------------------------------------------
@@ -414,20 +382,6 @@ _array_header_t* _array_header(_array_t* const a) {
 
 
 static inline
-size_t _array_capacity(_array_t* const a) {
-    const _array_header_t* const header = _array_header(a);
-    return header ? header->capacity : ((size_t)0);
-}
-
-
-static inline
-size_t _array_size(_array_t* const a) {
-    const _array_header_t* const header = _array_header(a);
-    return header ? header->size : ((size_t)0);
-}
-
-
-static inline
 void _array_alloc(_array_t* a, const size_t capacity, _array_allocator_t allocator, _array_destructor_t destructor) {
     _array_assert(!(*a), "array already allocated");
     const size_t mem_size = sizeof(_array_header_t) + capacity;
@@ -455,6 +409,20 @@ void _array_free(_array_t* a) {
         _array_assert(header == NULL, "allocator leaked memory");
     }
     (*a) = NULL;
+}
+
+
+static inline
+size_t _array_capacity(_array_t* const a) {
+    const _array_header_t* const header = _array_header(a);
+    return header ? header->capacity : ((size_t)0);
+}
+
+
+static inline
+size_t _array_size(_array_t* const a) {
+    const _array_header_t* const header = _array_header(a);
+    return header ? header->size : ((size_t)0);
 }
 
 

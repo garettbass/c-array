@@ -24,11 +24,8 @@ void destructed_element_count_destructor(int* begin, int* end) {
 }
 
 
-typedef array_t(int) int_array;
-
-
 int main(int argc, const char* argv[]) {
-    int_array a = {NULL};
+    int* a = NULL;
     test(array_size(a) == 0);
     test(array_capacity(a) == 0);
 
@@ -40,57 +37,57 @@ int main(int argc, const char* argv[]) {
     int* a0 = &array_append(a); *a0 = 1;
     test(array_size(a) == 1);
     test(array_capacity(a) >= 1);
-    test(array(a)[0] == 1);
+    test(a[0] == 1);
 
 
     array_append(a) = 2;
     test(array_size(a) == 2);
     test(array_capacity(a) >= 2);
-    test(array(a)[0] == 1);
-    test(array(a)[1] == 2);
+    test(a[0] == 1);
+    test(a[1] == 2);
 
 
     array_append(a) = 3;
     test(array_size(a) == 3);
     test(array_capacity(a) >= 3);
-    test(array(a)[0] == 1);
-    test(array(a)[1] == 2);
-    test(array(a)[2] == 3);
+    test(a[0] == 1);
+    test(a[1] == 2);
+    test(a[2] == 3);
 
 
     array_insert(a,0) = 0;
     test(array_size(a) == 4);
     test(array_capacity(a) >= 4);
-    test(array(a)[0] == 0);
-    test(array(a)[1] == 1);
-    test(array(a)[2] == 2);
-    test(array(a)[3] == 3);
+    test(a[0] == 0);
+    test(a[1] == 1);
+    test(a[2] == 2);
+    test(a[3] == 3);
 
 
     array_reserve(a,16);
     test(array_size(a) == 4);
     test(array_capacity(a) == 16);
-    test(array(a)[0] == 0);
-    test(array(a)[1] == 1);
-    test(array(a)[2] == 2);
-    test(array(a)[3] == 3);
+    test(a[0] == 0);
+    test(a[1] == 1);
+    test(a[2] == 2);
+    test(a[3] == 3);
 
 
     array_shrink(a);
     test(array_size(a) == 4);
     test(array_capacity(a) == 4);
-    test(array(a)[0] == 0);
-    test(array(a)[1] == 1);
-    test(array(a)[2] == 2);
-    test(array(a)[3] == 3);
+    test(a[0] == 0);
+    test(a[1] == 1);
+    test(a[2] == 2);
+    test(a[3] == 3);
 
 
     array_remove(a,0);
     test(array_size(a) == 3);
     test(array_capacity(a) == 4);
-    test(array(a)[0] == 1);
-    test(array(a)[1] == 2);
-    test(array(a)[2] == 3);
+    test(a[0] == 1);
+    test(a[1] == 2);
+    test(a[2] == 3);
     test(destructed_element_count == 1);
     destructed_element_count = 0;
 
@@ -98,8 +95,8 @@ int main(int argc, const char* argv[]) {
     array_remove_unordered(a,0);
     test(array_size(a) == 2);
     test(array_capacity(a) == 4);
-    test(array(a)[0] == 3);
-    test(array(a)[1] == 2);
+    test(a[0] == 3);
+    test(a[1] == 2);
     test(destructed_element_count == 1);
     destructed_element_count = 0;
 
@@ -112,7 +109,7 @@ int main(int argc, const char* argv[]) {
 
 
     array_free(a);
-    test(array(a) == NULL);
+    test(a == NULL);
     test(array_size(a) == 0);
     test(array_capacity(a) == 0);
 
@@ -127,7 +124,7 @@ int main(int argc, const char* argv[]) {
     test(array_size(a) == TEST_LENGTH);
     test(array_capacity(a) >= TEST_LENGTH);
     for (int i = 0; i < TEST_LENGTH; ++i) {
-        test(array(a)[i] == i);
+        test(a[i] == i);
     }
     {
         int i = 0;
@@ -139,7 +136,7 @@ int main(int argc, const char* argv[]) {
     {
         int i = 0;
         while (array_size(a)) {
-            test(array(a)[0] == i++);
+            test(a[0] == i++);
             array_remove(a,0);
         }
         test(array_size(a) == 0);
@@ -148,7 +145,7 @@ int main(int argc, const char* argv[]) {
         destructed_element_count = 0;
     }
     array_free(a);
-    test(array(a) == NULL);
+    test(a == NULL);
     test(array_size(a) == 0);
     test(array_capacity(a) == 0);
 
@@ -160,10 +157,10 @@ int main(int argc, const char* argv[]) {
     test(array_size(a) == TEST_LENGTH);
     test(array_capacity(a) >= TEST_LENGTH);
     for (int i = 0; i < TEST_LENGTH; ++i) {
-        test(array(a)[i] == (TEST_LENGTH - 1) - i);
+        test(a[i] == (TEST_LENGTH - 1) - i);
     }
     array_free(a);
-    test(array(a) == NULL);
+    test(a == NULL);
     test(array_size(a) == 0);
     test(array_capacity(a) == 0);
 
