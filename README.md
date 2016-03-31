@@ -2,14 +2,14 @@
 A simple std::vector-style array for C
 
 ```C
-int* a = NULL;
+array_t(int) a = array_null;
 
 // allocate array 'a' with capacity of int[16], and no destructor callback
 array_alloc(a, 16, NULL);
 
 array_append(a) = 1; // append to the array, and assign 1 to the appended integer
 
-a[0] = 2; // change the value of a[0] from 1 to 2
+array(a)[0] = 2; // change the value at index 0 from 1 to 2
 
 array_remove(a, 0); // remove integer at index 0
 
@@ -27,7 +27,7 @@ puts("\n");
 
 // pointer-based iteration
 const int* const end = array_end(a);
-for (int* itr = a; itr < end; ++itr) {
+for (int* itr = array_begin(a); itr < end; ++itr) {
 	printf("%i, ", *itr);
 }
 puts("\n");
