@@ -41,12 +41,15 @@ extern "C" {
         #ifndef free
             extern void free(void* ptr);
         #endif
-        return size ? (realloc(ptr, size)) : (free(ptr),NULL);
+        return size ? (realloc(ptr, size)) : (free(ptr),(void*)NULL);
     }
 #endif
 
 
 //------------------------------------------------------------------------------
+
+
+#define array_t(T) T*
 
 
 // void array_alloc(T*& a, size_t capacity, void (*destructor)(T* begin, T* end))
@@ -157,74 +160,34 @@ An assertion will fail if the array is empty.
 @hideinitializer **/
 
 
-// T& array_append(T*& a)
-#define array_append(a) \
-    ((a)[ _array_append(_array_ptr((a)), _array_stride((a))) / _array_stride((a)) ])
+// void array_append(T*& array, T value)
+#define array_append(a, v) \
+    ( _array_append(_array_ptr((a)), _array_stride((a))), array_back(a) = v )
 /**< Appends a single element to the dynamic array, allocating additional
-storage if necessary.  The appended element is uninitialized.  Returns a
-reference to the appended element.
+storage if necessary.
 
 @code{.c}
     array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL);
     // ...
-    array_append(ia) = 123; // assign value 123 to ia[0]
+    array_append(ia, 123);
     assert(ia[0] == 123);
 @endcode
 @hideinitializer **/
 
 
-// T* array_append_n(T*& a, size_t count)
-#define array_append_n(a, count) \
-    ((a) + _array_append(_array_ptr((a)), _array_offset((a), (count))) / _array_stride((a)))
-/**< Appends count elements to the dynamic array, allocating additional storage
-if necessary.  Appended elements are uninitialized.  Returns a pointer to the
-first appended element.
-
-@code{.c}
-    array_t(int) ia = NULL;
-    array_alloc(ia, 16, NULL);
-    // ...
-    const size_t count = 3;
-    int* itr = array_append_n(ia, count);
-    int* end = itr + count;
-    for (; itr < end; ++itr) { *itr = 0; }
-@endcode
-@hideinitializer **/
-
-
-// T& array_insert(T*& a, size_t index)
-#define array_insert(a, index) \
-    ((a)[ _array_insert(_array_ptr((a)), _array_offset((a), (index)), _array_stride((a))) / _array_stride((a)) ])
+// void array_insert(T*& a, size_t index, T value)
+#define array_insert(a, index, v) \
+    ( _array_insert(_array_ptr((a)), _array_offset((a), (index)), _array_stride((a))), (a)[index] = v )
 /**< Inserts a single element at the provided index, allocating additional
-storage if necessary.  The inserted element is uninitialized.  Returns a
-reference to the inserted element.
+storage if necessary.
 
 @code{.c}
     array_t(int) ia = NULL;
     array_alloc(ia, 16, NULL);
     // ...
-    array_insert(ia, 1) = 123; // assign value 123 to ia[0]
+    array_insert(ia, 1, 123);
     assert(ia[1] == 123);
-@endcode
-@hideinitializer **/
-
-
-// T* array_insert_n(T*& a, sizet index, size_t count)
-#define array_insert_n(a, index, count) \
-    ((a) + _array_insert(_array_ptr((a)), _array_offset((a), (index)), _array_offset((a), (count))) / _array_stride((a)))
-/**< Inserts count elements into the dynamic array starting at index and
-allocating additional storage if necessary.  Appended elements are
-uninitialized.  Returns a pointer to the first appended element.
-
-@code{.c}
-    array_t(int) ia = NULL;
-    array_alloc(ia, 16, NULL);
-    // ...
-    const size_t count = 3;
-    int* itr = array_insert_n(ia, 0, count);
-    int* end = itr + count;
-    for (; itr < end; ++itr) { *itr = 0; }
 @endcode
 @hideinitializer **/
 
@@ -266,7 +229,7 @@ to the array's destructor if it is not NULL.
 // T* array_begin(T* array)
 #define array_begin(a) (a)
 /**< Returns a pointer to the first element of the array, or NULL if the array
-is empty or NULL.
+is NULL.
 @hideinitializer **/
 
 
@@ -458,6 +421,7 @@ void _array_reserve(_array_t* a, const size_t capacity) {
     _array_assert((*a), "array uninitialized");
     if (_array_capacity(a) < capacity) {
         _array_grow(a, _array_ceilpow2(capacity));
+        _array_assert(_array_capacity(a) >= capacity, "_array_grow() failed");
     }
 }
 
@@ -599,8 +563,3 @@ void _array_clear(_array_t* const a) {
 #if __cplusplus
 } // extern "C"
 #endif // __cplusplus
-
-
-#if array_inline
-#include "array.inl"
-#endif
